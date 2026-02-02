@@ -83,27 +83,27 @@ type RelatedTagsQuery struct {
 }
 
 type EventMarket struct {
-	ID                 string   `json:"id"`
-	Question           string   `json:"question"`
-	ConditionID        string   `json:"conditionId"`
-	Slug               string   `json:"slug"`
-	ResolutionSource   *string  `json:"resolutionSource,omitempty"`
-	EndDate            *string  `json:"endDate,omitempty"`
-	Liquidity          *string  `json:"liquidity,omitempty"`
-	StartDate          *string  `json:"startDate,omitempty"`
-	Image              string   `json:"image"`
-	Icon               string   `json:"icon"`
-	Description        string   `json:"description"`
-	Outcomes           []string `json:"outcomes"`
-	OutcomePrices      []string `json:"outcomePrices"`
-	Volume             *string  `json:"volume,omitempty"`
-	Active             bool     `json:"active"`
-	Closed             bool     `json:"closed"`
-	MarketMakerAddress *string  `json:"marketMakerAddress,omitempty"`
-	CreatedAt          string   `json:"createdAt"`
-	UpdatedAt          string   `json:"updatedAt"`
-	New                *bool    `json:"new,omitempty"`
-	ClobTokenIDs       []string `json:"clobTokenIds"`
+	ID                 string      `json:"id"`
+	Question           string      `json:"question"`
+	ConditionID        string      `json:"conditionId"`
+	Slug               string      `json:"slug"`
+	ResolutionSource   *string     `json:"resolutionSource,omitempty"`
+	EndDate            *string     `json:"endDate,omitempty"`
+	Liquidity          *string     `json:"liquidity,omitempty"`
+	StartDate          *string     `json:"startDate,omitempty"`
+	Image              string      `json:"image"`
+	Icon               string      `json:"icon"`
+	Description        string      `json:"description"`
+	Outcomes           StringArray `json:"outcomes"`
+	OutcomePrices      StringArray `json:"outcomePrices"`
+	Volume             *string     `json:"volume,omitempty"`
+	Active             bool        `json:"active"`
+	Closed             bool        `json:"closed"`
+	MarketMakerAddress *string     `json:"marketMakerAddress,omitempty"`
+	CreatedAt          string      `json:"createdAt"`
+	UpdatedAt          string      `json:"updatedAt"`
+	New                *bool       `json:"new,omitempty"`
+	ClobTokenIDs       StringArray `json:"clobTokenIds"`
 }
 
 type Event struct {
