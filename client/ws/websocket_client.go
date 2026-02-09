@@ -297,7 +297,7 @@ func (ws *WebSocketClient) sendInitialSubscription() error {
 		"assets_ids": assetIDs,
 		"type":       "market",
 	}
-	log.Printf("subscribe request: %v\n", message)
+	//log.Printf("subscribe request: %v\n", message)
 	return ws.withConnWrite(func(conn *websocket.Conn) error {
 		return conn.WriteJSON(message)
 	})
@@ -317,7 +317,7 @@ func (ws *WebSocketClient) sendSubscription(tokenIds []string) error {
 		"operation":  "subscribe",
 	}
 
-	log.Printf("subscribe request: %v\n", message)
+	//log.Printf("subscribe request: %v\n", message)
 	return ws.withConnWrite(func(conn *websocket.Conn) error {
 		return conn.WriteJSON(message)
 	})
