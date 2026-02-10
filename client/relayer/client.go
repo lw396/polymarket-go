@@ -677,6 +677,174 @@ func (c *RelayClient) ApproveRequestContractForPolymarketWithTurnkey(
 	)
 }
 
+func (c *RelayClient) ApproveForPolymarketWithPrivateKey() (*ClientRelayerTransactionResponse, error) {
+	if c.Signer == nil {
+		return nil, errors.New("signer is required")
+	}
+	if c.Signer.SignerType() != signer.PrivateKey {
+		return nil, errors.New("signer is not a private key")
+	}
+	pub, err := c.Signer.GetPubkeyOfPrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	safe := builder.Derive(pub, c.ContractConfig.SafeFactory)
+	approved, usdcApprovals, tokenApprovals, err := c.CheckAllApprovals(safe)
+	fmt.Printf("approved:%v, usdcApprove:%v, tokenApprove:%v \n", approved, usdcApprovals, tokenApprovals)
+	if err != nil {
+		return nil, err
+	}
+	if approved {
+		return nil, nil
+	}
+	var txs []model.SafeTransaction
+	if !usdcApprovals {
+		usdc := constants.USDCe
+
+		usdcSpenders := []common.Address{
+			constants.CTF_CONTRACT,
+			constants.NEGRISK_ADAPTER,
+			constants.CTF_EXCHANGE,
+			constants.NEGRISK_CTF,
+		}
+
+		for _, spender := range usdcSpenders {
+			approveTxs, err := c.createUsdcApproveTxn(usdc, spender)
+			if err != nil {
+				return nil, err
+			}
+			txs = append(txs, approveTxs...)
+		}
+	}
+
+	if !tokenApprovals {
+		erc1155Operators := []common.Address{
+			constants.CTF_EXCHANGE,
+			constants.NEGRISK_CTF,
+			constants.NEGRISK_ADAPTER,
+		}
+
+		for _, op := range erc1155Operators {
+			erc1155Txs, err := c.createErc1155ApproveAllTxn(constants.CTF_CONTRACT, op, true)
+			if err != nil {
+				return nil, err
+			}
+			txs = append(txs, erc1155Txs...)
+		}
+	}
+	var metadata string
+	if !usdcApprovals && tokenApprovals {
+		metadata = "Set all token approvals for trading"
+	} else {
+		if !usdcApprovals {
+			metadata = "approve USDC to polymarket contracts"
+		} else {
+			metadata = ""
+		}
+	}
+
+	return c.ExecuteWithPrivateKey(txs, metadata)
+}
+
+func (c *RelayClient) ApproveRequestContractForPolymarketWithPrivatekey(
+	contractName string,
+) (*ClientRelayerTransactionResponse, error) {
+
+	if c.Signer == nil {
+		return nil, errors.New("signer is required")
+	}
+	if c.Signer.SignerType() != signer.PrivateKey {
+		return nil, errors.New("signer is not a private key")
+	}
+
+	var (
+		usdcSpenders     []common.Address
+		erc1155Operators []common.Address
+	)
+
+	switch strings.ToLower(strings.TrimSpace(contractName)) {
+
+	case "ctf_contract":
+		usdcSpenders = []common.Address{
+			constants.CTF_CONTRACT,
+		}
+		erc1155Operators = []common.Address{
+			constants.CTF_CONTRACT,
+		}
+
+	case "ctf_exchange":
+
+		usdcSpenders = []common.Address{
+			constants.CTF_EXCHANGE,
+		}
+		erc1155Operators = []common.Address{
+			constants.CTF_EXCHANGE,
+		}
+
+	case "negrisk_ctf":
+
+		usdcSpenders = []common.Address{
+			constants.NEGRISK_CTF,
+		}
+		erc1155Operators = []common.Address{
+			constants.NEGRISK_CTF,
+		}
+
+	case "negrisk_adapter":
+		usdcSpenders = []common.Address{
+			constants.NEGRISK_ADAPTER,
+		}
+		erc1155Operators = []common.Address{
+			constants.NEGRISK_ADAPTER,
+		}
+
+	case "all":
+
+		usdcSpenders = []common.Address{
+			constants.CTF_CONTRACT,
+			constants.CTF_EXCHANGE,
+			constants.NEGRISK_ADAPTER,
+			constants.NEGRISK_CTF,
+		}
+		erc1155Operators = []common.Address{
+			constants.CTF_CONTRACT,
+			constants.CTF_EXCHANGE,
+			constants.NEGRISK_CTF,
+			constants.NEGRISK_ADAPTER,
+		}
+
+	default:
+		return nil, fmt.Errorf("unknown contractName: %s", contractName)
+	}
+
+	var txs []model.SafeTransaction
+
+	usdc := constants.USDCe
+	for _, spender := range usdcSpenders {
+		approveTxs, err := c.createUsdcApproveTxn(usdc, spender)
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, approveTxs...)
+	}
+
+	for _, op := range erc1155Operators {
+		erc1155Txs, err := c.createErc1155ApproveAllTxn(constants.CTF_CONTRACT, op, true)
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, erc1155Txs...)
+	}
+
+	if len(txs) == 0 {
+		return nil, nil
+	}
+
+	metadata := fmt.Sprintf("approve USDC to polymarket contracts")
+
+	return c.ExecuteWithPrivateKey(txs, metadata)
+}
+
 func (c *RelayClient) functionSelector(signature string) []byte {
 	return crypto.Keccak256([]byte(signature))[:4]
 }

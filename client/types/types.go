@@ -223,6 +223,11 @@ type MakerOrder struct {
 	Side          Side   `json:"side"`
 }
 
+type TradesResponse struct {
+	Data       []Trade `json:"data"`
+	NextCursor string  `json:"next_cursor"`
+}
+
 type Trade struct {
 	ID              string       `json:"id"`
 	TakerOrderID    string       `json:"taker_order_id"`

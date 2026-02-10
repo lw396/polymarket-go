@@ -413,8 +413,8 @@ func (c *ClobClient) GetOrder(funder common.Address, orderID string) (*types.Ope
 	return &result, err
 }
 
-// GetTrades gets trades
-func (c *ClobClient) GetTrades(funder common.Address, params *types.TradeParams, onlyFirstPage bool, nextCursor string) ([]types.Trade, error) {
+// GetTrades gets a single page of trades with pagination support
+func (c *ClobClient) GetTrades(funder common.Address, params *types.TradeParams, nextCursor string) (*types.TradesResponse, error) {
 	if c.creds == nil {
 		return nil, fmt.Errorf("API credentials are required")
 	}
@@ -456,27 +456,34 @@ func (c *ClobClient) GetTrades(funder common.Address, params *types.TradeParams,
 		}
 	}
 
-	var result struct {
-		Data       []types.Trade `json:"data"`
-		NextCursor string        `json:"next_cursor"`
-	}
-
+	var result types.TradesResponse
 	err = c.getJSONWithHeadersAndParams(endpoint.GetTrades, headers, queryParams, &result)
 	if err != nil {
 		return nil, err
 	}
 
-	if onlyFirstPage || result.NextCursor == "-1" {
-		return result.Data, nil
+	return &result, nil
+}
+
+// GetAllTrades gets all trades by iterating through all pages
+func (c *ClobClient) GetAllTrades(funder common.Address, params *types.TradeParams) ([]types.Trade, error) {
+	var allTrades []types.Trade
+	nextCursor := ""
+
+	for {
+		resp, err := c.GetTrades(funder, params, nextCursor)
+		if err != nil {
+			return allTrades, err
+		}
+		allTrades = append(allTrades, resp.Data...)
+
+		if resp.NextCursor == types.END_CURSOR || resp.NextCursor == "" {
+			break
+		}
+		nextCursor = resp.NextCursor
 	}
 
-	// Recursively get all pages
-	moreTrades, err := c.GetTrades(funder, params, onlyFirstPage, result.NextCursor)
-	if err != nil {
-		return result.Data, nil // Return what we have so far
-	}
-
-	return append(result.Data, moreTrades...), nil
+	return allTrades, nil
 }
 
 // Helper methods for HTTP requests
