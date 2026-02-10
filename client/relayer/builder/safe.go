@@ -2,7 +2,6 @@ package builder
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -67,7 +66,11 @@ func BuildSafeTransactionRequest(
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("only support TURNKEY, please wait develop")
+		sig, err = signerHandler.SignEIP712StructHash(structHashHex, constants.ZERO_ADDRESS)
+		if err != nil {
+			return nil, err
+		}
+		// return nil, errors.New("only support TURNKEY, please wait develop")
 	}
 
 	packedSig, err := splitAndPackSig(sig)

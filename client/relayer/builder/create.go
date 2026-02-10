@@ -18,7 +18,7 @@ import (
 const createProxyTypeStr = "CreateProxy(address paymentToken,uint256 payment,address paymentReceiver)"
 
 func BuildSafeCreateTransactionRequest(
-	signer *signer.Signer,
+	signerHandler *signer.Signer,
 	args model.SafeCreateTransactionArgs,
 	cfg config.ContractConfig,
 	turnkeyAccount common.Address,
@@ -38,12 +38,22 @@ func BuildSafeCreateTransactionRequest(
 	if err != nil {
 		return nil, err
 	}
-
-	sig, err := signer.SignHashWithTurnkey(structHashHex, turnkeyAccount)
-	if err != nil {
-		return nil, err
+	var sig string
+	if signerHandler.SignerType() == signer.Turnkey {
+		sig, err = signerHandler.SignHashWithTurnkey(structHashHex, turnkeyAccount)
+		if err != nil {
+			return nil, err
+		}
 	}
-
+	if signerHandler.SignerType() == signer.PrivateKey {
+		sig, err = signerHandler.SignHash(structHashHex)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if sig == "" {
+		return nil, fmt.Errorf("BuildSafeCreateTransactionRequest: invalid signature")
+	}
 	return &model.TransactionRequest{
 		Type:        model.TransactionTypeSafeCreate,
 		From:        fromAddr,

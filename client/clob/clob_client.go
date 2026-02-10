@@ -839,8 +839,8 @@ func (c *ClobClient) createOrder(args clob_types.OrderArgs, option clob_types.Pa
 		funder = option.SafeAccount
 
 	} else if c.signer.SignerType() == signer.PrivateKey {
-		signatureType = constants.EOA
-		funder = common.HexToAddress(c.signer.Address())
+		signatureType = constants.POLY_GNOSIS_SAFE
+		funder = option.SafeAccount
 	}
 
 	orderBuilder, err := order_builder.NewOrderBuilder(c.signer, signatureType, funder)
@@ -1150,8 +1150,8 @@ func (c *ClobClient) createMarketOrder(args clob_types.MarketOrderArgs, option c
 		funder = option.SafeAccount
 
 	} else if c.signer.SignerType() == signer.PrivateKey {
-		signatureType = constants.EOA
-		funder = common.HexToAddress(c.signer.Address())
+		signatureType = constants.POLY_GNOSIS_SAFE
+		funder = option.SafeAccount
 	}
 
 	orderBuilder, err := order_builder.NewOrderBuilder(c.signer, signatureType, funder)
