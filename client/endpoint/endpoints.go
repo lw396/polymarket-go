@@ -1,7 +1,8 @@
 package endpoint
 
 const (
-	WsUrl = "wss://ws-subscriptions-clob.polymarket.com"
+	PolygonEndpoint = "https://polygon-bor-rpc.publicnode.com"
+	WsUrl           = "wss://ws-subscriptions-clob.polymarket.com"
 )
 
 // API endpoints

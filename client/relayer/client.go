@@ -24,6 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/shopspring/decimal"
+	"github.com/ybina/polymarket-go/client/endpoint"
 	"github.com/ybina/polymarket-go/tools/headers"
 
 	"github.com/ybina/polymarket-go/client/config"
@@ -123,7 +124,7 @@ func (c *RelayClient) GetNonce(address common.Address, signerType string) (uint6
 }
 
 func (c *RelayClient) GetSafeNonceOnChain(safe common.Address) (uint64, error) {
-	rpcURL := "https://polygon-rpc.com/"
+	rpcURL := endpoint.PolygonEndpoint
 	if strings.TrimSpace(rpcURL) == "" {
 		return 0, fmt.Errorf("rpc url is empty")
 	}
@@ -1128,6 +1129,60 @@ func (c *RelayClient) TransferUsdceFromSafeWithTurnkey(
 	metadata := fmt.Sprintf("Transfer USDC.e to %s", targetAddr.Hex())
 
 	resp, err := c.ExecuteWithTurnkey(txs, metadata, turnkeyAccount)
+	if err != nil {
+		return "", err
+	}
+	if resp != nil {
+		//log.Printf("Transfer submitted. txID=%s txHash=%s", resp.TransactionID, resp.TransactionHash)
+		return resp.TransactionHash, nil
+	}
+	return "", errors.New("response is empty")
+}
+
+func (c *RelayClient) TransferUsdceFromSafeWithPrivateKey(
+	targetAddr common.Address,
+	amount decimal.Decimal,
+) (string, error) {
+	if c.Signer == nil {
+		return "", errors.New("signer is required")
+	}
+	if c.Signer.SignerType() != signer.PrivateKey {
+		return "", errors.New("signer is not a private key")
+	}
+	if c.BuilderConfig == nil {
+		return "", errors.New("builder config is required")
+	}
+
+	if targetAddr == constants.ZERO_ADDRESS {
+		return "", errors.New("target address is required")
+	}
+	if amount.LessThanOrEqual(decimal.Zero) {
+		return "", fmt.Errorf("amount must be > 0, got %s", amount.String())
+	}
+
+	scaled := amount.Shift(6).Truncate(0)
+	amtBig := scaled.BigInt()
+
+	if amtBig.Sign() <= 0 {
+		return "", fmt.Errorf("amount too small after truncation (USDCe 6 decimals): %s", amount.String())
+	}
+
+	data, err := c.encodeTransfer(targetAddr, amtBig)
+	if err != nil {
+		return "", err
+	}
+
+	txs := []model.SafeTransaction{
+		{
+			To:        constants.USDCe,
+			Operation: model.Call,
+			Data:      data,
+			Value:     "0",
+		},
+	}
+	metadata := fmt.Sprintf("Transfer USDC.e to %s", targetAddr.Hex())
+
+	resp, err := c.ExecuteWithPrivateKey(txs, metadata)
 	if err != nil {
 		return "", err
 	}
