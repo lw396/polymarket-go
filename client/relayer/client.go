@@ -938,7 +938,7 @@ func (c *RelayClient) encodeSetApprovalForAll(operator common.Address, approved 
 }
 
 func (c *RelayClient) CheckUsdcApprovalForSpender(safeAddr common.Address, spender common.Address) (bool, error) {
-	rpcURL := "https://polygon-rpc.com/"
+	rpcURL := endpoint.PolygonEndpoint
 	if strings.TrimSpace(rpcURL) == "" {
 		return false, fmt.Errorf("rpc url is empty (ContractConfig.RpcUrl)")
 	}
@@ -989,7 +989,7 @@ func (c *RelayClient) CheckUsdcApprovalForSpender(safeAddr common.Address, spend
 }
 
 func (c *RelayClient) CheckERC1155ApprovalForSpender(safeAddr common.Address, spender common.Address) (bool, error) {
-	rpcURL := "https://polygon-rpc.com/"
+	rpcURL := endpoint.PolygonEndpoint
 	if strings.TrimSpace(rpcURL) == "" {
 		return false, fmt.Errorf("rpc url is empty (ContractConfig.RpcUrl)")
 	}

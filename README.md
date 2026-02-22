@@ -2,10 +2,12 @@
 
 A Go SDK for **Polymarket** (community/third‑party implementation). It covers **CLOB**, **Relayer**, **Data API**, **Gamma API**, and **WebSocket** market data—and additionally supports **Turnkey** for wallet/user management and signing trades.
 
-> **Note:**  Only support no gas transaction, so you have to derive SAFE wallet 
+> **Note:**  Only support no gas transaction, so you have to derive SAFE wallet.
 > **Disclaimer:** This is not an official Polymarket library. APIs and request/response shapes may change. Use at your own risk and add proper monitoring, retries, and safeguards in production.  
 > **Security:** Do **not** commit real private keys, Turnkey credentials, or API keys into the repo.
 
+> **Suggestion:**  
+> 1. replace endpoint/endpoints.go:PolygonEndpoint to your own endpoint.
 ---
 
 If you like this repo, please give me a star
