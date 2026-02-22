@@ -330,6 +330,18 @@ func (c *ClobClient) DeriveApiKey(nonce *uint64, option clob_types.ClobOption) (
 	return apiKey, nil
 }
 
+func (c *ClobClient) CreateOrDeriveApiKey(nonce *uint64, option clob_types.ClobOption) (*types.ApiKeyCreds, error) {
+	apiCreds, err := c.CreateApiKey(nil, option)
+	if err != nil {
+		apiCreds, err = c.DeriveApiKey(nil, option)
+		if err != nil {
+			return nil, err
+		}
+		return apiCreds, err
+	}
+	return apiCreds, nil
+}
+
 // GetApiKeys gets API keys
 func (c *ClobClient) GetApiKeys(addr common.Address) (*types.ApiKeysResponse, error) {
 	if c.creds == nil {
@@ -1016,10 +1028,6 @@ func (c *ClobClient) priceValid(price decimal.Decimal, tickSize types.TickSize) 
 	}
 
 	return nil
-}
-
-func (c *ClobClient) CreateOrDeriveApiKey() {
-
 }
 
 func (c *ClobClient) GetOrders(orderIds []string) {
