@@ -7,7 +7,7 @@ A Go SDK for **Polymarket** (community/third‑party implementation). It covers 
 > **Security:** Do **not** commit real private keys, Turnkey credentials, or API keys into the repo.
 
 > **Suggestion:**  
-> 1. replace endpoint/endpoints.go:PolygonEndpoint to your own endpoint.
+> 1. Use your own polygon rpc in relay client.
 ---
 
 If you like this repo, please give me a star

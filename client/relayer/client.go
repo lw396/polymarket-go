@@ -42,6 +42,7 @@ type RelayClient struct {
 	BuilderConfig  *headers.BuilderConfig
 	HttpClient     *http.Client
 	ContractConfig config.ContractConfig
+	PolygonRpc     string
 }
 
 type RelayerTransaction struct {
@@ -56,6 +57,7 @@ func NewRelayClient(
 	signer *signer.Signer,
 	builderConfig *headers.BuilderConfig,
 	proxyUrl *string,
+	polygonRpc *string,
 
 ) (*RelayClient, error) {
 	if strings.HasSuffix(relayerURL, "/") {
@@ -78,6 +80,12 @@ func NewRelayClient(
 	} else {
 		transport = &http.Transport{}
 	}
+	var rpc string
+	if polygonRpc != nil && *polygonRpc != "" {
+		rpc = *polygonRpc
+	} else {
+		rpc = endpoint.PolygonEndpoint
+	}
 
 	return &RelayClient{
 		RelayerURL:    relayerURL,
@@ -88,6 +96,7 @@ func NewRelayClient(
 			Timeout:   30 * time.Second,
 			Transport: transport,
 		},
+		PolygonRpc:     rpc,
 		ContractConfig: cfg,
 	}, nil
 }
@@ -124,7 +133,7 @@ func (c *RelayClient) GetNonce(address common.Address, signerType string) (uint6
 }
 
 func (c *RelayClient) GetSafeNonceOnChain(safe common.Address) (uint64, error) {
-	rpcURL := endpoint.PolygonEndpoint
+	rpcURL := c.PolygonRpc
 	if strings.TrimSpace(rpcURL) == "" {
 		return 0, fmt.Errorf("rpc url is empty")
 	}
@@ -938,7 +947,7 @@ func (c *RelayClient) encodeSetApprovalForAll(operator common.Address, approved 
 }
 
 func (c *RelayClient) CheckUsdcApprovalForSpender(safeAddr common.Address, spender common.Address) (bool, error) {
-	rpcURL := endpoint.PolygonEndpoint
+	rpcURL := c.PolygonRpc
 	if strings.TrimSpace(rpcURL) == "" {
 		return false, fmt.Errorf("rpc url is empty (ContractConfig.RpcUrl)")
 	}
@@ -989,7 +998,7 @@ func (c *RelayClient) CheckUsdcApprovalForSpender(safeAddr common.Address, spend
 }
 
 func (c *RelayClient) CheckERC1155ApprovalForSpender(safeAddr common.Address, spender common.Address) (bool, error) {
-	rpcURL := endpoint.PolygonEndpoint
+	rpcURL := c.PolygonRpc
 	if strings.TrimSpace(rpcURL) == "" {
 		return false, fmt.Errorf("rpc url is empty (ContractConfig.RpcUrl)")
 	}
