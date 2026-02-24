@@ -54,3 +54,26 @@ func TestGammaSDK_GetMarketBySlug(t *testing.T) {
 	log.Println(marketStr)
 
 }
+
+func TestGammaSDK_GetMarketBySlug(t *testing.T) {
+	proxyUrl := "http://127.0.0.1:7890"
+	client, err := NewGammaSDK(&proxyUrl)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	slug := "eth-updown-15m-1770739200"
+	market, err := client.GetMarketBySlug(slug, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	marketStr, err := sonic.MarshalString(market)
+	if err != nil {
+
+		t.Error(err)
+		return
+	}
+	log.Println(marketStr)
+
+}
