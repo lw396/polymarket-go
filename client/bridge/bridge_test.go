@@ -40,7 +40,7 @@ func TestBridgeClient_CreateDepositAddresses(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	safeAddr := common.HexToAddress("")
+	safeAddr := common.HexToAddress("YOUR_SAFE_ADDRESS")
 	res, err := client.CreateDepositAddress(safeAddr)
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +95,7 @@ func TestBridgeClient_GetDepositStatus(t *testing.T) {
 		return
 	}
 	// from polymarket
-	depositAddr := ""
+	depositAddr := "YOUR_DEPOSIT_ADDRESS"
 	status, err := client.GetDepositStatus(depositAddr)
 	if err != nil {
 		t.Fatal(err)
