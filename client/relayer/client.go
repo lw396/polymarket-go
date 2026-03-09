@@ -1262,9 +1262,12 @@ func (c *RelayClient) PollUntilState(
 }
 
 var (
-	ctfABIOnce   sync.Once
-	ctfABIParsed abi.ABI
-	ctfABIErr    error
+	ctfABIOnce            sync.Once
+	ctfABIParsed          abi.ABI
+	ctfABIErr             error
+	negRiskAdapterABIOnce sync.Once
+	negRiskAdapterParsed  abi.ABI
+	negRiskAdapterABIErr  error
 )
 
 func getCTFABI() (abi.ABI, error) {
@@ -1272,6 +1275,13 @@ func getCTFABI() (abi.ABI, error) {
 		ctfABIParsed, ctfABIErr = abi.JSON(strings.NewReader(ctfABI))
 	})
 	return ctfABIParsed, ctfABIErr
+}
+
+func getNegRiskAdapterABI() (abi.ABI, error) {
+	negRiskAdapterABIOnce.Do(func() {
+		negRiskAdapterParsed, negRiskAdapterABIErr = abi.JSON(strings.NewReader(negRiskAdapterABI))
+	})
+	return negRiskAdapterParsed, negRiskAdapterABIErr
 }
 
 func toBigIntSlice(xs []uint64) []*big.Int {
@@ -1292,6 +1302,92 @@ func (c *RelayClient) packCTF(method string, args ...interface{}) (string, error
 		return "", fmt.Errorf("pack %s failed: %w", method, err)
 	}
 	return "0x" + hex.EncodeToString(data), nil
+}
+
+func (c *RelayClient) packNegRiskAdapter(method string, args ...interface{}) (string, error) {
+	parsed, err := getNegRiskAdapterABI()
+	if err != nil {
+		return "", fmt.Errorf("parse neg risk adapter abi failed: %w", err)
+	}
+	data, err := parsed.Pack(method, args...)
+	if err != nil {
+		return "", fmt.Errorf("pack %s failed: %w", method, err)
+	}
+	return "0x" + hex.EncodeToString(data), nil
+}
+
+func (c *RelayClient) buildRedeemPositionTx(
+	collateralToken common.Address,
+	parentCollectionId common.Hash,
+	conditionId common.Hash,
+	indexSets []uint64,
+) (model.SafeTransaction, error) {
+	if collateralToken == constants.ZERO_ADDRESS {
+		return model.SafeTransaction{}, errors.New("collateralToken is required")
+	}
+	if (conditionId == common.Hash{}) {
+		return model.SafeTransaction{}, errors.New("conditionId is required")
+	}
+	if len(indexSets) == 0 {
+		return model.SafeTransaction{}, errors.New("indexSets is required")
+	}
+
+	data, err := c.packCTF(
+		"redeemPositions",
+		collateralToken,
+		parentCollectionId,
+		conditionId,
+		toBigIntSlice(indexSets),
+	)
+	if err != nil {
+		return model.SafeTransaction{}, err
+	}
+
+	return model.SafeTransaction{
+		To:        constants.CTF_CONTRACT,
+		Operation: model.Call,
+		Data:      data,
+		Value:     "0",
+	}, nil
+}
+
+func (c *RelayClient) buildRedeemNegRiskPositionTx(
+	conditionId common.Hash,
+	amounts []*big.Int,
+) (model.SafeTransaction, error) {
+	if (conditionId == common.Hash{}) {
+		return model.SafeTransaction{}, errors.New("conditionId is required")
+	}
+	if len(amounts) == 0 {
+		return model.SafeTransaction{}, errors.New("amounts are required")
+	}
+	hasPositiveAmount := false
+	for i, amount := range amounts {
+		if amount == nil {
+			return model.SafeTransaction{}, fmt.Errorf("amounts[%d] is nil", i)
+		}
+		if amount.Sign() < 0 {
+			return model.SafeTransaction{}, fmt.Errorf("amounts[%d] must be >= 0", i)
+		}
+		if amount.Sign() > 0 {
+			hasPositiveAmount = true
+		}
+	}
+	if !hasPositiveAmount {
+		return model.SafeTransaction{}, errors.New("at least one redeem amount must be > 0")
+	}
+
+	data, err := c.packNegRiskAdapter("redeemPositions", conditionId, amounts)
+	if err != nil {
+		return model.SafeTransaction{}, err
+	}
+
+	return model.SafeTransaction{
+		To:        constants.NEGRISK_ADAPTER,
+		Operation: model.Call,
+		Data:      data,
+		Value:     "0",
+	}, nil
 }
 
 func (c *RelayClient) executeSafeTxs(txs []model.SafeTransaction, metadata string, turnkeyAccount common.Address) (*ClientRelayerTransactionResponse, error) {
@@ -1320,38 +1416,32 @@ func (c *RelayClient) RedeemPosition(
 	conditionId common.Hash,
 	indexSets []uint64,
 ) (*ClientRelayerTransactionResponse, error) {
-
-	if collateralToken == constants.ZERO_ADDRESS {
-		return nil, errors.New("collateralToken is required")
-	}
-	if (conditionId == common.Hash{}) {
-		return nil, errors.New("conditionId is required")
-	}
-	if len(indexSets) == 0 {
-		return nil, errors.New("indexSets is required")
-	}
-
-	data, err := c.packCTF(
-		"redeemPositions",
-		collateralToken,
-		parentCollectionId,
-		conditionId,
-		toBigIntSlice(indexSets),
-	)
+	tx, err := c.buildRedeemPositionTx(collateralToken, parentCollectionId, conditionId, indexSets)
 	if err != nil {
 		return nil, err
 	}
 
-	txs := []model.SafeTransaction{
-		{
-			To:        constants.CTF_CONTRACT,
-			Operation: model.Call,
-			Data:      data,
-			Value:     "0",
-		},
-	}
+	txs := []model.SafeTransaction{tx}
 
 	return c.executeSafeTxs(txs, "Redeem positions", turnkeyAccount)
+}
+
+// Redeem neg-risk positions through the official NegRiskAdapter:
+// redeemPositions(conditionId, amounts)
+// amounts must follow the market outcome order used by Polymarket (for example outcomes/clobTokenIds).
+func (c *RelayClient) RedeemNegRiskPosition(
+	turnkeyAccount common.Address,
+	conditionId common.Hash,
+	amounts []*big.Int,
+) (*ClientRelayerTransactionResponse, error) {
+	tx, err := c.buildRedeemNegRiskPositionTx(conditionId, amounts)
+	if err != nil {
+		return nil, err
+	}
+
+	txs := []model.SafeTransaction{tx}
+
+	return c.executeSafeTxs(txs, "Redeem neg risk positions", turnkeyAccount)
 }
 
 // Split positions:
