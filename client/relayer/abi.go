@@ -61,3 +61,15 @@ const ctfABI = `[
     "outputs": []
   }
 ]`
+
+const negRiskAdapterABI = `[
+  {
+    "name": "redeemPositions",
+    "type": "function",
+    "inputs": [
+      {"name":"_conditionId","type":"bytes32"},
+      {"name":"_amounts","type":"uint256[]"}
+    ],
+    "outputs": []
+  }
+]`
