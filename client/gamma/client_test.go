@@ -54,3 +54,31 @@ func TestGammaSDK_GetMarketBySlug(t *testing.T) {
 	log.Println(marketStr)
 
 }
+
+func TestGetEvents(t *testing.T) {
+	proxyUrl := "http://127.0.0.1:7890"
+	client, err := NewGammaSDK(&proxyUrl)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	query := &UpdatedEventQuery{
+		Slug: &[]string{"btc-updown-5m-1774788300", "btc-updown-5m-1774788000"},
+	}
+
+	events, err := client.GetEvents(query)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	eventsStr, err := sonic.MarshalString(events)
+	if err != nil {
+
+		t.Error(err)
+		return
+	}
+	log.Println(eventsStr)
+
+}

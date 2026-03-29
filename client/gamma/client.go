@@ -91,14 +91,18 @@ func (g *GammaSDK) buildURL(endpoint string, query interface{}) (string, error) 
 				continue
 			}
 
-			var strValue string
-			if fieldValue.Kind() == reflect.Ptr {
-				strValue = fmt.Sprintf("%v", fieldValue.Elem().Interface())
-			} else {
-				strValue = fmt.Sprintf("%v", fieldValue.Interface())
+			actual := fieldValue
+			if actual.Kind() == reflect.Ptr {
+				actual = actual.Elem()
 			}
 
-			values.Add(fieldName, strValue)
+			if actual.Kind() == reflect.Slice {
+				for j := 0; j < actual.Len(); j++ {
+					values.Add(fieldName, fmt.Sprintf("%v", actual.Index(j).Interface()))
+				}
+			} else {
+				values.Add(fieldName, fmt.Sprintf("%v", actual.Interface()))
+			}
 		}
 
 		u.RawQuery = values.Encode()
