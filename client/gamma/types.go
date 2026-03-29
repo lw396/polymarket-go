@@ -147,6 +147,7 @@ type Event struct {
 	SortBy                *string       `json:"sortBy,omitempty"`
 	ClosedTime            *string       `json:"closedTime,omitempty"`
 	AutomaticallyResolved *bool         `json:"automaticallyResolved,omitempty"`
+	EventMetadata         interface{}   `json:"eventMetadata,omitempty"`
 }
 
 type UpdatedEventQuery struct {
