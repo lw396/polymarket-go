@@ -151,25 +151,26 @@ type Event struct {
 }
 
 type UpdatedEventQuery struct {
-	Limit        *int     `json:"limit,omitempty"`
-	Offset       *int     `json:"offset,omitempty"`
-	Order        *string  `json:"order,omitempty"`
-	Ascending    *bool    `json:"ascending,omitempty"`
-	Search       *string  `json:"search,omitempty"`
-	Active       *bool    `json:"active,omitempty"`
-	Closed       *bool    `json:"closed,omitempty"`
-	Archived     *bool    `json:"archived,omitempty"`
-	Featured     *bool    `json:"featured,omitempty"`
-	New          *bool    `json:"new,omitempty"`
-	Restricted   *bool    `json:"restricted,omitempty"`
-	MinVolume    *float64 `json:"minVolume,omitempty"`
-	MaxVolume    *float64 `json:"maxVolume,omitempty"`
-	MinLiquidity *float64 `json:"minLiquidity,omitempty"`
-	MaxLiquidity *float64 `json:"maxLiquidity,omitempty"`
-	Series       *string  `json:"series,omitempty"`
-	Tag          *string  `json:"tag,omitempty"`
-	StartDate    *string  `json:"startDate,omitempty"`
-	EndDate      *string  `json:"endDate,omitempty"`
+	Limit        *int      `json:"limit,omitempty"`
+	Offset       *int      `json:"offset,omitempty"`
+	Order        *string   `json:"order,omitempty"`
+	Ascending    *bool     `json:"ascending,omitempty"`
+	Slug         *[]string `json:"slug,omitempty"`
+	Search       *string   `json:"search,omitempty"`
+	Active       *bool     `json:"active,omitempty"`
+	Closed       *bool     `json:"closed,omitempty"`
+	Archived     *bool     `json:"archived,omitempty"`
+	Featured     *bool     `json:"featured,omitempty"`
+	New          *bool     `json:"new,omitempty"`
+	Restricted   *bool     `json:"restricted,omitempty"`
+	MinVolume    *float64  `json:"minVolume,omitempty"`
+	MaxVolume    *float64  `json:"maxVolume,omitempty"`
+	MinLiquidity *float64  `json:"minLiquidity,omitempty"`
+	MaxLiquidity *float64  `json:"maxLiquidity,omitempty"`
+	Series       *string   `json:"series,omitempty"`
+	Tag          *string   `json:"tag,omitempty"`
+	StartDate    *string   `json:"startDate,omitempty"`
+	EndDate      *string   `json:"endDate,omitempty"`
 }
 
 type PaginatedEventQuery struct {
