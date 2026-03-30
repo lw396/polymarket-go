@@ -53,3 +53,7 @@ func GetContractConfig(chainID types.Chain) (ContractConfig, error) {
 func GetWsPingInterval() time.Duration {
 	return 10 * time.Second
 }
+
+func GetRtdsPingInterval() time.Duration {
+	return 5 * time.Second
+}
