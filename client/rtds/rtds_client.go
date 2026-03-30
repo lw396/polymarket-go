@@ -88,7 +88,6 @@ func (c *RtdsClient) Connect() error {
 	c.mu.Lock()
 	if c.isConnecting || (c.conn != nil && c.IsConnected()) {
 		c.mu.Unlock()
-		c.logger.Printf("Already connected or connecting")
 		return nil
 	}
 	c.isConnecting = true
@@ -129,18 +128,14 @@ func (c *RtdsClient) Connect() error {
 	c.mu.Unlock()
 
 	conn.SetPongHandler(func(appData string) error {
-		c.logger.Printf("Received CONTROL PONG: %s", appData)
 		return nil
 	})
 	conn.SetPingHandler(func(appData string) error {
-		c.logger.Printf("Received CONTROL PING: %s", appData)
 		_ = c.withConnWrite(func(c *websocket.Conn) error {
 			return c.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(5*time.Second))
 		})
 		return nil
 	})
-
-	c.logger.Printf("RTDS WebSocket connected to %s", fullURL)
 
 	go c.handleMessages()
 	go c.pingWorker()
@@ -235,7 +230,6 @@ func (c *RtdsClient) sendSubscriptions(action string, subs []Subscription) error
 		Subscriptions: subs,
 	}
 
-	c.logger.Printf("Sending %s: %d subscription(s)", action, len(subs))
 	return c.withConnWrite(func(conn *websocket.Conn) error {
 		return conn.WriteJSON(msg)
 	})
@@ -269,10 +263,8 @@ func (c *RtdsClient) handleMessages() {
 			default:
 			}
 			if ce, ok := err.(*websocket.CloseError); ok {
-				c.logger.Printf("ReadMessage CloseError: code=%v reason=%v", ce.Code, ce.Text)
 				c.handleDisconnect(ce.Code, ce.Text)
 			} else {
-				c.logger.Printf("ReadMessage error: %v", err)
 				c.handleDisconnect(-1, err.Error())
 			}
 			return
@@ -301,7 +293,6 @@ func (c *RtdsClient) processMessage(data []byte) {
 	var msg RtdsMessage
 	if err := json.Unmarshal(data, &msg); err != nil {
 		c.handleError(fmt.Errorf("failed to parse RTDS message: %w", err))
-		c.logger.Printf("Raw message: %s", string(data))
 		return
 	}
 
@@ -341,11 +332,9 @@ func (c *RtdsClient) pingWorker() {
 				return conn.WriteMessage(websocket.TextMessage, msgPING)
 			})
 			if err != nil {
-				c.logger.Printf("failed to send ping: %v", err)
 				c.handleDisconnect(-1, "ping send failed: "+err.Error())
 				return
 			}
-			c.logger.Printf("Sent PING")
 		}
 	}
 }
@@ -388,7 +377,6 @@ func (c *RtdsClient) tryReconnect() {
 	}
 	if c.options.MaxReconnectAttempts > 0 && c.reconnectAttempts >= c.options.MaxReconnectAttempts {
 		c.mu.Unlock()
-		c.logger.Println("Max reconnect attempts reached")
 		return
 	}
 
@@ -404,15 +392,11 @@ func (c *RtdsClient) tryReconnect() {
 		c.reconnectTimer = nil
 		c.mu.Unlock()
 
-		c.logger.Printf("Attempting reconnect %d...", attempt)
 		if err := c.Connect(); err != nil {
-			c.logger.Printf("Reconnect failed: %v", err)
 			c.handleDisconnect(-1, "reconnect failed: "+err.Error())
 		}
 	})
 	c.mu.Unlock()
-
-	c.logger.Printf("Scheduling reconnect attempt %d after %s...", attempt, delay)
 
 	if c.callbacks.OnReconnect != nil {
 		c.callbacks.OnReconnect(attempt)
