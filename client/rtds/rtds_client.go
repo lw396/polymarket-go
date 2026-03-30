@@ -179,15 +179,18 @@ func (c *RtdsClient) Wait() {
 	}
 }
 
-func (c *RtdsClient) SubscribeBinance(symbols []string) error {
-	filters := ""
-	if len(symbols) > 0 {
-		filters = strings.Join(symbols, ",")
+func joinSymbolFilters(symbols []string) string {
+	if len(symbols) == 0 {
+		return ""
 	}
+	return strings.Join(symbols, ",")
+}
+
+func (c *RtdsClient) SubscribeBinance(symbols []string) error {
 	return c.sendSubscription(ActionSubscribe, Subscription{
 		Topic:   TopicCryptoPrices,
-		Type:    "update",
-		Filters: filters,
+		Type:    SubscriptionTypeUpdate,
+		Filters: joinSymbolFilters(symbols),
 	})
 }
 
@@ -196,14 +199,10 @@ func (c *RtdsClient) SubscribeChainlink(symbols []string) error {
 }
 
 func (c *RtdsClient) UnsubscribeBinance(symbols []string) error {
-	filters := ""
-	if len(symbols) > 0 {
-		filters = strings.Join(symbols, ",")
-	}
 	return c.sendSubscription(ActionUnsubscribe, Subscription{
 		Topic:   TopicCryptoPrices,
-		Type:    "*",
-		Filters: filters,
+		Type:    SubscriptionTypeAll,
+		Filters: joinSymbolFilters(symbols),
 	})
 }
 
@@ -213,15 +212,14 @@ func (c *RtdsClient) UnsubscribeChainlink(symbols []string) error {
 
 func buildChainlinkSubscriptions(symbols []string) []Subscription {
 	if len(symbols) == 0 {
-		return []Subscription{{Topic: TopicCryptoPricesChainlink, Type: "*"}}
+		return []Subscription{{Topic: TopicCryptoPricesChainlink, Type: SubscriptionTypeAll}}
 	}
 	subs := make([]Subscription, len(symbols))
 	for i, sym := range symbols {
-		filterJSON, _ := json.Marshal(map[string]string{"symbol": sym})
 		subs[i] = Subscription{
 			Topic:   TopicCryptoPricesChainlink,
-			Type:    "*",
-			Filters: string(filterJSON),
+			Type:    SubscriptionTypeAll,
+			Filters: fmt.Sprintf(`{"symbol":"%s"}`, sym),
 		}
 	}
 	return subs
@@ -232,14 +230,6 @@ func (c *RtdsClient) sendSubscription(action string, sub Subscription) error {
 }
 
 func (c *RtdsClient) sendSubscriptions(action string, subs []Subscription) error {
-	c.mu.RLock()
-	conn := c.conn
-	c.mu.RUnlock()
-
-	if conn == nil {
-		return fmt.Errorf("not connected")
-	}
-
 	msg := SubscribeMessage{
 		Action:        action,
 		Subscriptions: subs,
@@ -289,16 +279,16 @@ func (c *RtdsClient) handleMessages() {
 		}
 
 		if messageType == websocket.TextMessage {
-			if bytes.Equal(message, []byte("PONG")) || bytes.Equal(message, []byte("pong")) {
+			if bytes.Equal(message, msgPONG) || bytes.Equal(message, msgPong) {
 				continue
 			}
-			if bytes.Equal(message, []byte("ping")) || bytes.Equal(message, []byte("PING")) {
+			if bytes.Equal(message, msgPing) || bytes.Equal(message, msgPING) {
 				_ = c.withConnWrite(func(c *websocket.Conn) error {
-					reply := "pong"
-					if bytes.Equal(message, []byte("PING")) {
-						reply = "PONG"
+					reply := msgPong
+					if bytes.Equal(message, msgPING) {
+						reply = msgPONG
 					}
-					return c.WriteMessage(websocket.TextMessage, []byte(reply))
+					return c.WriteMessage(websocket.TextMessage, reply)
 				})
 				continue
 			}
@@ -348,7 +338,7 @@ func (c *RtdsClient) pingWorker() {
 			return
 		case <-ticker.C:
 			err := c.withConnWrite(func(conn *websocket.Conn) error {
-				return conn.WriteMessage(websocket.TextMessage, []byte("PING"))
+				return conn.WriteMessage(websocket.TextMessage, msgPING)
 			})
 			if err != nil {
 				c.logger.Printf("failed to send ping: %v", err)

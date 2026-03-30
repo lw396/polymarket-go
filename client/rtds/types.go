@@ -14,6 +14,20 @@ const (
 	ActionUnsubscribe = "unsubscribe"
 )
 
+// Subscription type values
+const (
+	SubscriptionTypeUpdate = "update"
+	SubscriptionTypeAll    = "*"
+)
+
+// WebSocket text control messages
+var (
+	msgPing = []byte("ping")
+	msgPING = []byte("PING")
+	msgPong = []byte("pong")
+	msgPONG = []byte("PONG")
+)
+
 // Binance trading pair symbols (lowercase concatenated format)
 const (
 	SymbolBtcUsdt = "btcusdt"
