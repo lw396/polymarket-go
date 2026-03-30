@@ -271,6 +271,9 @@ func (c *RtdsClient) handleMessages() {
 		}
 
 		if messageType == websocket.TextMessage {
+			if len(message) == 0 {
+				continue
+			}
 			if bytes.Equal(message, msgPONG) || bytes.Equal(message, msgPong) {
 				continue
 			}
