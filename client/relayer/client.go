@@ -23,16 +23,16 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/lw396/polymarket-go/client/endpoint"
+	"github.com/lw396/polymarket-go/tools/headers"
 	"github.com/shopspring/decimal"
-	"github.com/ybina/polymarket-go/client/endpoint"
-	"github.com/ybina/polymarket-go/tools/headers"
 
-	"github.com/ybina/polymarket-go/client/config"
-	"github.com/ybina/polymarket-go/client/constants"
-	"github.com/ybina/polymarket-go/client/relayer/builder"
-	"github.com/ybina/polymarket-go/client/relayer/model"
-	"github.com/ybina/polymarket-go/client/signer"
-	"github.com/ybina/polymarket-go/client/types"
+	"github.com/lw396/polymarket-go/client/config"
+	"github.com/lw396/polymarket-go/client/constants"
+	"github.com/lw396/polymarket-go/client/relayer/builder"
+	"github.com/lw396/polymarket-go/client/relayer/model"
+	"github.com/lw396/polymarket-go/client/signer"
+	"github.com/lw396/polymarket-go/client/types"
 )
 
 type RelayClient struct {

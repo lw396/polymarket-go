@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ybina/polymarket-go/client/types"
+	"github.com/lw396/polymarket-go/client/types"
 )
 
 type ContractConfig struct {

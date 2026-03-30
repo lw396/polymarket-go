@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ybina/polymarket-go/client/relayer/utils"
+	"github.com/lw396/polymarket-go/client/relayer/utils"
 )
 
 var safeTxTypeHash = crypto.Keccak256Hash([]byte(

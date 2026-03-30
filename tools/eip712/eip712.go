@@ -8,9 +8,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ybina/polymarket-go/client/clob/clob_types"
-	"github.com/ybina/polymarket-go/client/constants"
-	"github.com/ybina/polymarket-go/client/signer"
+	"github.com/lw396/polymarket-go/client/clob/clob_types"
+	"github.com/lw396/polymarket-go/client/constants"
+	"github.com/lw396/polymarket-go/client/signer"
 )
 
 const (

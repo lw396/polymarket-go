@@ -8,8 +8,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ybina/polymarket-go/client/relayer/model/polyEip712"
-	"github.com/ybina/polymarket-go/client/signer"
+	"github.com/lw396/polymarket-go/client/relayer/model/polyEip712"
+	"github.com/lw396/polymarket-go/client/signer"
 )
 
 var eip712DomainTypeHash = crypto.Keccak256Hash([]byte(

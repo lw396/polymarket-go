@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ybina/polymarket-go/client/config"
-	"github.com/ybina/polymarket-go/client/endpoint"
+	"github.com/lw396/polymarket-go/client/config"
+	"github.com/lw396/polymarket-go/client/endpoint"
 )
 
 // RtdsClientOptions configures the RTDS WebSocket client.

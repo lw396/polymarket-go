@@ -62,7 +62,7 @@ tools/      – EIP-712, HMAC, header utilities
 ## Install
 
 ```bash
-go get github.com/ybina/polymarket-go
+go get github.com/lw396/polymarket-go
 ```
 
 ---
@@ -87,10 +87,10 @@ import (
     "github.com/ethereum/go-ethereum/common"
     "github.com/ethereum/go-ethereum/crypto"
 
-    "github.com/ybina/polymarket-go/client/clob"
-    "github.com/ybina/polymarket-go/client/signer"
-    "github.com/ybina/polymarket-go/client/types"
-    "github.com/ybina/polymarket-go/tools/headers"
+    "github.com/lw396/polymarket-go/client/clob"
+    "github.com/lw396/polymarket-go/client/signer"
+    "github.com/lw396/polymarket-go/client/types"
+    "github.com/lw396/polymarket-go/tools/headers"
 )
 
 func main() {
@@ -155,9 +155,9 @@ import (
 
     "github.com/shopspring/decimal"
 
-    "github.com/ybina/polymarket-go/client/clob"
-    "github.com/ybina/polymarket-go/client/clob/clob_types"
-    "github.com/ybina/polymarket-go/client/types"
+    "github.com/lw396/polymarket-go/client/clob"
+    "github.com/lw396/polymarket-go/client/clob/clob_types"
+    "github.com/lw396/polymarket-go/client/types"
 )
 
 func main() {
@@ -213,9 +213,9 @@ import (
 
     "github.com/shopspring/decimal"
 
-    "github.com/ybina/polymarket-go/client/clob"
-    "github.com/ybina/polymarket-go/client/clob/clob_types"
-    "github.com/ybina/polymarket-go/client/types"
+    "github.com/lw396/polymarket-go/client/clob"
+    "github.com/lw396/polymarket-go/client/clob/clob_types"
+    "github.com/lw396/polymarket-go/client/types"
 )
 
 func main() {
@@ -259,8 +259,8 @@ import (
     "log"
     "time"
 
-    "github.com/ybina/polymarket-go/client/ws"
-    "github.com/ybina/polymarket-go/client/types"
+    "github.com/lw396/polymarket-go/client/ws"
+    "github.com/lw396/polymarket-go/client/types"
 )
 
 func main() {
@@ -304,7 +304,7 @@ package main
 import (
     "log"
 
-    "github.com/ybina/polymarket-go/turnkey"
+    "github.com/lw396/polymarket-go/turnkey"
 )
 
 func main() {
@@ -359,11 +359,11 @@ import (
 
     "github.com/ethereum/go-ethereum/common"
 
-    "github.com/ybina/polymarket-go/client/relayer"
-    "github.com/ybina/polymarket-go/client/signer"
-    "github.com/ybina/polymarket-go/client/types"
-    "github.com/ybina/polymarket-go/tools/headers"
-    "github.com/ybina/polymarket-go/turnkey"
+    "github.com/lw396/polymarket-go/client/relayer"
+    "github.com/lw396/polymarket-go/client/signer"
+    "github.com/lw396/polymarket-go/client/types"
+    "github.com/lw396/polymarket-go/tools/headers"
+    "github.com/lw396/polymarket-go/turnkey"
 )
 
 func main() {
@@ -456,7 +456,7 @@ import (
     "github.com/bytedance/sonic"
     "github.com/ethereum/go-ethereum/common"
 
-    "github.com/ybina/polymarket-go/client/bridge"
+    "github.com/lw396/polymarket-go/client/bridge"
 )
 
 func main() {

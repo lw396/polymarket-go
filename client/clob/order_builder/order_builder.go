@@ -6,14 +6,14 @@ import (
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/lw396/polymarket-go/client/clob/clob_types"
+	"github.com/lw396/polymarket-go/client/clob/utils"
+	"github.com/lw396/polymarket-go/client/clob/utils_order_builder"
+	"github.com/lw396/polymarket-go/client/config"
+	"github.com/lw396/polymarket-go/client/constants"
+	"github.com/lw396/polymarket-go/client/signer"
+	"github.com/lw396/polymarket-go/client/types"
 	"github.com/shopspring/decimal"
-	"github.com/ybina/polymarket-go/client/clob/clob_types"
-	"github.com/ybina/polymarket-go/client/clob/utils"
-	"github.com/ybina/polymarket-go/client/clob/utils_order_builder"
-	"github.com/ybina/polymarket-go/client/config"
-	"github.com/ybina/polymarket-go/client/constants"
-	"github.com/ybina/polymarket-go/client/signer"
-	"github.com/ybina/polymarket-go/client/types"
 )
 
 func NewOrderBuilder(signer *signer.Signer, sigType constants.SigType, funder common.Address) (*OrderBuilder, error) {

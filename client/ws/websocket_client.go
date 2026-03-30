@@ -12,11 +12,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/websocket"
-	"github.com/ybina/polymarket-go/client/clob"
-	"github.com/ybina/polymarket-go/client/clob/clob_types"
-	"github.com/ybina/polymarket-go/client/config"
-	"github.com/ybina/polymarket-go/client/endpoint"
-	"github.com/ybina/polymarket-go/client/types"
+	"github.com/lw396/polymarket-go/client/clob"
+	"github.com/lw396/polymarket-go/client/clob/clob_types"
+	"github.com/lw396/polymarket-go/client/config"
+	"github.com/lw396/polymarket-go/client/endpoint"
+	"github.com/lw396/polymarket-go/client/types"
 )
 
 type WebSocketClientOptions struct {
@@ -360,7 +360,6 @@ func (ws *WebSocketClient) handleMessages() {
 			txt := string(message)
 
 			if txt == "PONG" {
-				log.Printf("Received TEXT PONG \n")
 				continue
 			}
 			if txt == "ping" || txt == "PING" {
@@ -447,7 +446,6 @@ func (ws *WebSocketClient) pingWorker() {
 				ws.handleDisconnect(-1, "ping send failed: "+err.Error())
 				return
 			}
-			log.Printf("Sent TEXT PING \n")
 		}
 	}
 }
@@ -507,8 +505,6 @@ func (ws *WebSocketClient) tryReconnect() {
 	}
 	ws.mu.Unlock()
 
-	log.Printf(fmt.Sprintf("Scheduling reconnect attempt %d after %s...\n", attempt, delay))
-
 	if ws.callbacks.OnReconnect != nil {
 		ws.callbacks.OnReconnect(attempt)
 	}
@@ -519,7 +515,6 @@ func (ws *WebSocketClient) tryReconnect() {
 		ws.reconnectTimer = nil
 		ws.mu.Unlock()
 
-		log.Printf(fmt.Sprintf("Attempting reconnect %d... \n", attempt))
 		if err := ws.Connect(); err != nil {
 			log.Printf("Reconnect failed: %v\n", err)
 			ws.handleDisconnect(-1, "reconnect failed: "+err.Error())

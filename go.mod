@@ -1,4 +1,4 @@
-module github.com/ybina/polymarket-go
+module github.com/lw396/polymarket-go
 
 go 1.25.6
 

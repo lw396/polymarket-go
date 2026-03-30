@@ -2,8 +2,8 @@ package clob_types
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/lw396/polymarket-go/client/types"
 	"github.com/shopspring/decimal"
-	"github.com/ybina/polymarket-go/client/types"
 )
 
 type RequestArgs struct {

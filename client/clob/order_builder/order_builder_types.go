@@ -2,8 +2,8 @@ package order_builder
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ybina/polymarket-go/client/constants"
-	"github.com/ybina/polymarket-go/client/signer"
+	"github.com/lw396/polymarket-go/client/constants"
+	"github.com/lw396/polymarket-go/client/signer"
 )
 
 type OrderBuilder struct {
