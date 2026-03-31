@@ -52,6 +52,7 @@ type RtdsClient struct {
 	isConnecting      bool
 	shouldReconnect   bool
 	logger            *log.Logger
+	subscriptions     []Subscription
 }
 
 // NewRtdsClient creates a new RTDS WebSocket client.
@@ -140,6 +141,8 @@ func (c *RtdsClient) Connect() error {
 	go c.handleMessages()
 	go c.pingWorker()
 
+	c.resendSubscriptions()
+
 	if c.callbacks.OnConnect != nil {
 		c.callbacks.OnConnect()
 	}
@@ -182,27 +185,47 @@ func joinSymbolFilters(symbols []string) string {
 }
 
 func (c *RtdsClient) SubscribeBinance(symbols []string) error {
-	return c.sendSubscription(ActionSubscribe, Subscription{
+	subs := []Subscription{{
 		Topic:   TopicCryptoPrices,
 		Type:    SubscriptionTypeUpdate,
 		Filters: joinSymbolFilters(symbols),
-	})
+	}}
+	if err := c.sendSubscriptions(ActionSubscribe, subs); err != nil {
+		return err
+	}
+	c.addSubscriptions(subs)
+	return nil
 }
 
 func (c *RtdsClient) SubscribeChainlink(symbols []string) error {
-	return c.sendSubscriptions(ActionSubscribe, buildChainlinkSubscriptions(symbols))
+	subs := buildChainlinkSubscriptions(symbols)
+	if err := c.sendSubscriptions(ActionSubscribe, subs); err != nil {
+		return err
+	}
+	c.addSubscriptions(subs)
+	return nil
 }
 
 func (c *RtdsClient) UnsubscribeBinance(symbols []string) error {
-	return c.sendSubscription(ActionUnsubscribe, Subscription{
+	subs := []Subscription{{
 		Topic:   TopicCryptoPrices,
 		Type:    SubscriptionTypeAll,
 		Filters: joinSymbolFilters(symbols),
-	})
+	}}
+	if err := c.sendSubscription(ActionUnsubscribe, subs[0]); err != nil {
+		return err
+	}
+	c.removeSubscriptions(TopicCryptoPrices)
+	return nil
 }
 
 func (c *RtdsClient) UnsubscribeChainlink(symbols []string) error {
-	return c.sendSubscriptions(ActionUnsubscribe, buildChainlinkSubscriptions(symbols))
+	subs := buildChainlinkSubscriptions(symbols)
+	if err := c.sendSubscriptions(ActionUnsubscribe, subs); err != nil {
+		return err
+	}
+	c.removeSubscriptions(TopicCryptoPricesChainlink)
+	return nil
 }
 
 func buildChainlinkSubscriptions(symbols []string) []Subscription {
@@ -218,6 +241,37 @@ func buildChainlinkSubscriptions(symbols []string) []Subscription {
 		}
 	}
 	return subs
+}
+
+func (c *RtdsClient) addSubscriptions(subs []Subscription) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.subscriptions = append(c.subscriptions, subs...)
+}
+
+func (c *RtdsClient) removeSubscriptions(topic string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	filtered := c.subscriptions[:0]
+	for _, s := range c.subscriptions {
+		if s.Topic != topic {
+			filtered = append(filtered, s)
+		}
+	}
+	c.subscriptions = filtered
+}
+
+func (c *RtdsClient) resendSubscriptions() {
+	c.mu.RLock()
+	subs := c.subscriptions
+	c.mu.RUnlock()
+
+	if len(subs) == 0 {
+		return
+	}
+	if err := c.sendSubscriptions(ActionSubscribe, subs); err != nil {
+		c.logger.Printf("Failed to resend subscriptions after reconnect: %v", err)
+	}
 }
 
 func (c *RtdsClient) sendSubscription(action string, sub Subscription) error {
