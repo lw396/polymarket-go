@@ -388,9 +388,23 @@ func (c *ClobClient) GetClosedOnlyMode(funder common.Address) (*types.BanStatus,
 // Requires L2 authentication.
 // Set params.AssetType to AssetTypeCollateral for USDC or AssetTypeConditional for a YES/NO token.
 // When AssetTypeConditional, params.TokenID must be set.
+// Set params.SignatureType to constants.POLY_GNOSIS_SAFE (2) when using a Gnosis Safe proxy wallet
+// so the server returns the Safe's balance. In this mode L2 auth uses the signer's EOA address,
+// matching the TS client behavior where POLY_ADDRESS is the signer (EOA), not the Safe address.
 func (c *ClobClient) GetBalanceAllowance(funder common.Address, params *types.BalanceAllowanceParams) (*types.BalanceAllowanceResponse, error) {
 	if c.creds == nil {
 		return nil, fmt.Errorf("API credentials are required")
+	}
+
+	// When using a Gnosis Safe, the server identifies the Safe via the owning EOA.
+	// L2 auth must use the EOA (not the Safe address), matching TS client behavior.
+	authAddr := funder
+	if params != nil && params.SignatureType != nil &&
+		constants.SigType(*params.SignatureType) == constants.POLY_GNOSIS_SAFE &&
+		c.signer != nil {
+		if eoa, err := c.signer.GetPubkeyOfPrivateKey(); err == nil {
+			authAddr = eoa
+		}
 	}
 
 	headerArgs := &types.L2HeaderArgs{
@@ -398,7 +412,7 @@ func (c *ClobClient) GetBalanceAllowance(funder common.Address, params *types.Ba
 		RequestPath: endpoint.GetBalanceAllowance,
 	}
 
-	l2Headers, err := c.createL2Headers(funder, headerArgs)
+	l2Headers, err := c.createL2Headers(authAddr, headerArgs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create L2 headers: %w", err)
 	}
@@ -409,6 +423,9 @@ func (c *ClobClient) GetBalanceAllowance(funder common.Address, params *types.Ba
 		if params.TokenID != nil {
 			queryParams.Add("token_id", *params.TokenID)
 		}
+		if params.SignatureType != nil {
+			queryParams.Add("signature_type", strconv.Itoa(*params.SignatureType))
+		}
 	}
 
 	var result types.BalanceAllowanceResponse
@@ -416,7 +433,6 @@ func (c *ClobClient) GetBalanceAllowance(funder common.Address, params *types.Ba
 	return &result, err
 }
 
-// DeleteApiKey deletes API key
 func (c *ClobClient) DeleteApiKey(funder common.Address) error {
 	if c.creds == nil {
 		return fmt.Errorf("API credentials are required")

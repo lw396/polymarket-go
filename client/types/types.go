@@ -312,8 +312,9 @@ const (
 )
 
 type BalanceAllowanceParams struct {
-	AssetType AssetType `json:"asset_type"`
-	TokenID   *string   `json:"token_id,omitempty"`
+	AssetType     AssetType `json:"asset_type"`
+	TokenID       *string   `json:"token_id,omitempty"`
+	SignatureType *int      `json:"signature_type,omitempty"`
 }
 
 type BalanceAllowanceResponse struct {
