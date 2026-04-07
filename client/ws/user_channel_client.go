@@ -336,6 +336,10 @@ func (uc *UserChannelClient) handleMessages() {
 			if txt == "PONG" || txt == "pong" {
 				continue
 			}
+			if txt == "INVALID OPERATION" {
+				uc.logger.Printf("Received INVALID OPERATION from server, ignoring")
+				continue
+			}
 			if txt == "ping" || txt == "PING" {
 				_ = uc.withConnWrite(func(c *websocket.Conn) error {
 					reply := "pong"
