@@ -4,6 +4,7 @@ const (
 	PolygonEndpoint = "https://polygon-bor-rpc.publicnode.com"
 	WsUrl           = "wss://ws-subscriptions-clob.polymarket.com"
 	RtdsWsUrl       = "wss://ws-live-data.polymarket.com"
+	WsUserUrl       = "wss://ws-subscriptions-clob.polymarket.com/ws/user"
 )
 
 // API endpoints

@@ -274,3 +274,170 @@ func AsLastTradePriceMessage(msg MarketChannelMessage) (*LastTradePriceMessage, 
 	}
 	return nil, false
 }
+
+// User Channel event types
+const (
+	EventTypeTrade EventType = "trade"
+	EventTypeOrder EventType = "order"
+)
+
+// Trade status values
+const (
+	TradeStatusMatched   = "MATCHED"
+	TradeStatusMined     = "MINED"
+	TradeStatusConfirmed = "CONFIRMED"
+	TradeStatusRetrying  = "RETRYING"
+	TradeStatusFailed    = "FAILED"
+)
+
+// Order event type values
+const (
+	UserOrderPlacement    = "PLACEMENT"
+	UserOrderUpdate       = "UPDATE"
+	UserOrderCancellation = "CANCELLATION"
+)
+
+// UserChannelMessage is the interface for all user channel messages.
+type UserChannelMessage interface {
+	Validate() error
+	GetEventType() EventType
+}
+
+// MakerOrderDetail represents a maker order in a trade event.
+type MakerOrderDetail struct {
+	AssetID       string `json:"asset_id"`
+	MatchedAmount string `json:"matched_amount"`
+	OrderID       string `json:"order_id"`
+	Outcome       string `json:"outcome"`
+	Owner         string `json:"owner"`
+	Price         string `json:"price"`
+}
+
+// TradeEvent represents a trade event from the user channel.
+type TradeEvent struct {
+	EventType    EventType          `json:"event_type"`
+	AssetID      string             `json:"asset_id"`
+	ID           string             `json:"id"`
+	LastUpdate   string             `json:"last_update"`
+	MakerOrders  []MakerOrderDetail `json:"maker_orders"`
+	Market       string             `json:"market"`
+	MatchTime    string             `json:"matchtime"`
+	Outcome      string             `json:"outcome"`
+	Owner        string             `json:"owner"`
+	Price        string             `json:"price"`
+	Side         Side               `json:"side"`
+	Size         string             `json:"size"`
+	Status       string             `json:"status"`
+	TakerOrderID string             `json:"taker_order_id"`
+	Timestamp    string             `json:"timestamp"`
+	TradeOwner   string             `json:"trade_owner"`
+	Type         string             `json:"type"`
+}
+
+func (m *TradeEvent) Validate() error {
+	if m.EventType != EventTypeTrade {
+		return fmt.Errorf("invalid event_type: expected 'trade', got '%s'", m.EventType)
+	}
+	if m.ID == "" {
+		return fmt.Errorf("id is required")
+	}
+	if m.AssetID == "" {
+		return fmt.Errorf("asset_id is required")
+	}
+	if m.Market == "" {
+		return fmt.Errorf("market is required")
+	}
+	return nil
+}
+
+func (m *TradeEvent) GetEventType() EventType {
+	return m.EventType
+}
+
+// OrderEvent represents an order event from the user channel.
+type OrderEvent struct {
+	EventType       EventType `json:"event_type"`
+	AssetID         string    `json:"asset_id"`
+	AssociateTrades []string  `json:"associate_trades"`
+	ID              string    `json:"id"`
+	Market          string    `json:"market"`
+	OrderOwner      string    `json:"order_owner"`
+	OriginalSize    string    `json:"original_size"`
+	Outcome         string    `json:"outcome"`
+	Owner           string    `json:"owner"`
+	Price           string    `json:"price"`
+	Side            Side      `json:"side"`
+	SizeMatched     string    `json:"size_matched"`
+	Timestamp       string    `json:"timestamp"`
+	Type            string    `json:"type"`
+}
+
+func (m *OrderEvent) Validate() error {
+	if m.EventType != EventTypeOrder {
+		return fmt.Errorf("invalid event_type: expected 'order', got '%s'", m.EventType)
+	}
+	if m.ID == "" {
+		return fmt.Errorf("id is required")
+	}
+	if m.AssetID == "" {
+		return fmt.Errorf("asset_id is required")
+	}
+	if m.Market == "" {
+		return fmt.Errorf("market is required")
+	}
+	return nil
+}
+
+func (m *OrderEvent) GetEventType() EventType {
+	return m.EventType
+}
+
+// ParseUserChannelMessage parses a JSON message from the user channel.
+func ParseUserChannelMessage(data []byte) (UserChannelMessage, error) {
+	var eventTypeWrapper struct {
+		EventType EventType `json:"event_type"`
+	}
+
+	if err := json.Unmarshal(data, &eventTypeWrapper); err != nil {
+		return nil, fmt.Errorf("failed to parse event_type: %w", err)
+	}
+
+	switch eventTypeWrapper.EventType {
+	case EventTypeTrade:
+		var msg TradeEvent
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return nil, fmt.Errorf("failed to parse trade message: %w", err)
+		}
+		if err := msg.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid trade message: %w", err)
+		}
+		return &msg, nil
+	case EventTypeOrder:
+		var msg OrderEvent
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return nil, fmt.Errorf("failed to parse order message: %w", err)
+		}
+		if err := msg.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid order message: %w", err)
+		}
+		return &msg, nil
+	default:
+		return nil, fmt.Errorf("unknown user channel event_type: %s", eventTypeWrapper.EventType)
+	}
+}
+
+// AsTradeEvent attempts to cast to TradeEvent
+func AsTradeEvent(msg UserChannelMessage) (*TradeEvent, bool) {
+	if m, ok := msg.(*TradeEvent); ok {
+		return m, true
+	}
+	return nil, false
+}
+
+// AsOrderEvent attempts to cast to OrderEvent
+func AsOrderEvent(msg UserChannelMessage) (*OrderEvent, bool) {
+	if m, ok := msg.(*OrderEvent); ok {
+		return m, true
+	}
+	return nil, false
+}
