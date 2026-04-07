@@ -62,6 +62,7 @@ type UserChannelClient struct {
 	reconnectAttempts int
 	isConnecting      bool
 	shouldReconnect   bool
+	authenticated     bool
 	logger            *log.Logger
 	cachedApiKey      *types.ApiKeyCreds
 }
@@ -279,6 +280,13 @@ func (uc *UserChannelClient) sendAuthSubscription(apiKey *types.ApiKeyCreds) err
 		return nil
 	}
 
+	uc.mu.RLock()
+	alreadyAuthed := uc.authenticated
+	uc.mu.RUnlock()
+	if alreadyAuthed {
+		return nil
+	}
+
 	message := map[string]interface{}{
 		"auth": map[string]string{
 			"apiKey":     apiKey.Key,
@@ -289,9 +297,15 @@ func (uc *UserChannelClient) sendAuthSubscription(apiKey *types.ApiKeyCreds) err
 		"type":    "user",
 	}
 
-	return uc.withConnWrite(func(conn *websocket.Conn) error {
+	if err := uc.withConnWrite(func(conn *websocket.Conn) error {
 		return conn.WriteJSON(message)
-	})
+	}); err != nil {
+		return err
+	}
+	uc.mu.Lock()
+	uc.authenticated = true
+	uc.mu.Unlock()
+	return nil
 }
 
 func (uc *UserChannelClient) handleMessages() {
@@ -337,7 +351,6 @@ func (uc *UserChannelClient) handleMessages() {
 				continue
 			}
 			if txt == "INVALID OPERATION" {
-				uc.logger.Printf("Received INVALID OPERATION from server, ignoring")
 				continue
 			}
 			if txt == "ping" || txt == "PING" {
@@ -505,6 +518,7 @@ func (uc *UserChannelClient) forceCloseWithReason(code int, reason string) {
 	uc.mu.Lock()
 	conn := uc.conn
 	uc.conn = nil
+	uc.authenticated = false
 	uc.mu.Unlock()
 
 	if conn == nil {
