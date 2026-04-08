@@ -187,6 +187,14 @@ func (uc *UserChannelClient) Disconnect() {
 	uc.signalDone()
 }
 
+func (uc *UserChannelClient) ReconnectWithMarkets(markets []string) error {
+	uc.Disconnect()
+	uc.mu.Lock()
+	uc.options.Markets = markets
+	uc.mu.Unlock()
+	return uc.Connect()
+}
+
 func (uc *UserChannelClient) Subscribe(markets []string) error {
 	uc.mu.Lock()
 	existing := make(map[string]bool, len(uc.options.Markets))
