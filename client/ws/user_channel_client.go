@@ -202,6 +202,9 @@ func (uc *UserChannelClient) Subscribe(markets []string) error {
 	uc.mu.Unlock()
 
 	if uc.IsConnected() {
+		uc.mu.Lock()
+		uc.authenticated = false
+		uc.mu.Unlock()
 		apiKey := uc.getOrDeriveApiKey()
 		if apiKey == nil {
 			return fmt.Errorf("no API credentials available")
