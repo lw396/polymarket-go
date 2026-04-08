@@ -557,7 +557,7 @@ func (c *ClobClient) getWithParams(endpoint string, params url.Values) ([]byte, 
 	if len(params) > 0 {
 		fullURL += "?" + params.Encode()
 	}
-	// log.Printf("GET full %s\n", fullURL)
+
 	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -975,7 +975,6 @@ func (c *ClobClient) postOrder(order utils_order_builder.SignedOrder, option clo
 		result := types.OrderResponse{}
 		err = c.postJSONWithHeaders(endpoint.PostOrder, enriched, serializedBody, &result)
 		if err != nil {
-			log.Printf("postJSONWithHeaders: %s\n", err)
 			return nil, err
 		}
 		return &result, nil
@@ -1132,11 +1131,6 @@ func (c *ClobClient) CancelAllOrders(signerAddr common.Address) (*types.OrderRes
 }
 
 func (c *ClobClient) CreateAndPostMarketOrder(args clob_types.MarketOrderArgs, option clob_types.PartialCreateOrderOptions) (*types.OrderResponse, error) {
-	argStr, err := sonic.MarshalString(args)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("CreateAndPostMarketOrder arg:%v\n", argStr)
 	signedOrder, err := c.createMarketOrder(args, option)
 	if err != nil {
 		return nil, err
