@@ -53,6 +53,7 @@ type RtdsClient struct {
 	shouldReconnect   bool
 	logger            *log.Logger
 	subscriptions     []Subscription
+	chainlinkSymbols  map[string]bool
 }
 
 // NewRtdsClient creates a new RTDS WebSocket client.
@@ -198,6 +199,14 @@ func (c *RtdsClient) SubscribeBinance(symbols []string) error {
 }
 
 func (c *RtdsClient) SubscribeChainlink(symbols []string) error {
+	tracked := make(map[string]bool, len(symbols))
+	for _, sym := range symbols {
+		tracked[sym] = true
+	}
+	c.mu.Lock()
+	c.chainlinkSymbols = tracked
+	c.mu.Unlock()
+
 	subs := buildChainlinkSubscriptions(symbols)
 	if err := c.sendSubscriptions(ActionSubscribe, subs); err != nil {
 		return err
@@ -348,6 +357,14 @@ func (c *RtdsClient) processMessage(data []byte) {
 		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
 			c.handleError(fmt.Errorf("failed to parse crypto price payload: %w", err))
 			return
+		}
+		if msg.Topic == TopicCryptoPricesChainlink {
+			c.mu.RLock()
+			tracked := c.chainlinkSymbols
+			c.mu.RUnlock()
+			if len(tracked) > 0 && !tracked[payload.Symbol] {
+				return
+			}
 		}
 		if c.callbacks.OnCryptoPrice != nil {
 			c.callbacks.OnCryptoPrice(&payload)
