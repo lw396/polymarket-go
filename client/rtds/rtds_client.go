@@ -199,10 +199,8 @@ func (c *RtdsClient) SubscribeBinance(symbols []string) error {
 
 func (c *RtdsClient) SubscribeChainlink(symbols []string) error {
 	subs := buildChainlinkSubscriptions(symbols)
-	for _, sub := range subs {
-		if err := c.sendSubscription(ActionSubscribe, sub); err != nil {
-			return err
-		}
+	if err := c.sendSubscriptions(ActionSubscribe, subs); err != nil {
+		return err
 	}
 	c.addSubscriptions(subs)
 	return nil
@@ -221,30 +219,17 @@ func (c *RtdsClient) UnsubscribeBinance(symbols []string) error {
 	return nil
 }
 
-func (c *RtdsClient) UnsubscribeChainlink(symbols []string) error {
-	subs := buildChainlinkSubscriptions(symbols)
-	for _, sub := range subs {
-		if err := c.sendSubscription(ActionUnsubscribe, sub); err != nil {
-			return err
-		}
+func (c *RtdsClient) UnsubscribeChainlink(_ []string) error {
+	subs := buildChainlinkSubscriptions(nil)
+	if err := c.sendSubscriptions(ActionUnsubscribe, subs); err != nil {
+		return err
 	}
 	c.removeSubscriptions(TopicCryptoPricesChainlink)
 	return nil
 }
 
-func buildChainlinkSubscriptions(symbols []string) []Subscription {
-	if len(symbols) == 0 {
-		return []Subscription{{Topic: TopicCryptoPricesChainlink, Type: SubscriptionTypeAll}}
-	}
-	subs := make([]Subscription, len(symbols))
-	for i, sym := range symbols {
-		subs[i] = Subscription{
-			Topic:   TopicCryptoPricesChainlink,
-			Type:    SubscriptionTypeAll,
-			Filters: fmt.Sprintf(`{"symbol":"%s"}`, sym),
-		}
-	}
-	return subs
+func buildChainlinkSubscriptions(_ []string) []Subscription {
+	return []Subscription{{Topic: TopicCryptoPricesChainlink, Type: SubscriptionTypeAll}}
 }
 
 func (c *RtdsClient) addSubscriptions(subs []Subscription) {
