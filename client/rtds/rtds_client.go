@@ -199,8 +199,10 @@ func (c *RtdsClient) SubscribeBinance(symbols []string) error {
 
 func (c *RtdsClient) SubscribeChainlink(symbols []string) error {
 	subs := buildChainlinkSubscriptions(symbols)
-	if err := c.sendSubscriptions(ActionSubscribe, subs); err != nil {
-		return err
+	for _, sub := range subs {
+		if err := c.sendSubscription(ActionSubscribe, sub); err != nil {
+			return err
+		}
 	}
 	c.addSubscriptions(subs)
 	return nil
@@ -221,8 +223,10 @@ func (c *RtdsClient) UnsubscribeBinance(symbols []string) error {
 
 func (c *RtdsClient) UnsubscribeChainlink(symbols []string) error {
 	subs := buildChainlinkSubscriptions(symbols)
-	if err := c.sendSubscriptions(ActionUnsubscribe, subs); err != nil {
-		return err
+	for _, sub := range subs {
+		if err := c.sendSubscription(ActionUnsubscribe, sub); err != nil {
+			return err
+		}
 	}
 	c.removeSubscriptions(TopicCryptoPricesChainlink)
 	return nil
